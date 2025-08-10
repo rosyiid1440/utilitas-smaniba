@@ -1,0 +1,59 @@
+<div class="flex justify-between items-center">
+    <h1 class="text-3xl font-semibold text-gray-800">
+        <%= pageTitle %>
+    </h1>
+    <a href="/nas"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">
+        <i class="bi bi-arrow-left mr-1"></i> Kembali ke Daftar
+    </a>
+</div>
+
+<div class="mt-6 p-6 bg-white rounded-lg shadow-md">
+    <form action="<%= nas ? '/nas/edit/' + nas.id : '/nas/add' %>" method="POST">
+        <div class="space-y-6">
+
+            <div>
+                <label for="nasname" class="block text-sm font-medium text-gray-700">Alamat IP (nasname)</label>
+                <input type="text" id="nasname" name="nasname" value="<%= nas ? nas.nasname : '' %>"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Contoh: 192.168.88.1" required>
+                <p class="mt-1 text-xs text-gray-500">Alamat IP dari router MikroTik Anda.</p>
+            </div>
+
+            <div>
+                <label for="shortname" class="block text-sm font-medium text-gray-700">Nama Pendek (shortname)</label>
+                <input type="text" id="shortname" name="shortname" value="<%= nas ? nas.shortname : '' %>"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Contoh: mikrotik-sekolah">
+                <p class="mt-1 text-xs text-gray-500">Nama alias untuk router agar mudah diidentifikasi.</p>
+            </div>
+
+            <div>
+                <label for="secret" class="block text-sm font-medium text-gray-700">Shared Secret</label>
+                <input type="text" id="secret" name="secret" value="<%= nas ? nas.secret : '' %>"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Gunakan password yang kuat" required>
+                <p class="mt-1 text-xs text-gray-500">Password ini harus **sama persis** dengan yang Anda atur di menu
+                    RADIUS pada MikroTik.</p>
+            </div>
+
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700">Deskripsi</label>
+                <input type="text" id="description" name="description" value="<%= nas ? nas.description : '' %>"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Contoh: Router Utama Gedung A">
+                <p class="mt-1 text-xs text-gray-500">Catatan tambahan mengenai lokasi atau fungsi router ini.</p>
+            </div>
+
+        </div>
+
+        <div class="mt-8 pt-5 border-t border-gray-200">
+            <div class="flex justify-end">
+                <button type="submit"
+                    class="px-6 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Simpan Router
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

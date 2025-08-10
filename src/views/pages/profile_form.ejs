@@ -1,0 +1,150 @@
+<div class="flex justify-between items-center">
+    <h1 class="text-3xl font-semibold text-gray-800">
+        <%= pageTitle %>
+    </h1>
+    <a href="/profiles"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">
+        <i class="bi bi-arrow-left mr-1"></i> Kembali ke Daftar
+    </a>
+</div>
+
+<div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <div class="lg:col-span-2">
+        <form action="/profiles/save" method="POST" class="bg-white p-6 rounded-lg shadow-md space-y-6">
+            <input type="hidden" name="originalProfilename" value="<%= profilename %>">
+
+            <div>
+                <label for="profilename" class="block text-sm font-medium text-gray-700">Nama Profil</label>
+                <input type="text" id="profilename" name="profilename" value="<%= profilename %>" required
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+            </div>
+
+            <hr>
+
+            <div>
+                <h3 class="text-lg font-medium text-gray-900">Atribut Profil</h3>
+                <div id="attributes-container" class="mt-4 space-y-4">
+                    <% if (profileData.attributes && profileData.attributes.length> 0) { %>
+                        <% profileData.attributes.forEach(attr=> { %>
+                            <div class="attribute-row grid grid-cols-1 sm:grid-cols-8 gap-2 items-center">
+                                <input type="text" name="attribute[]" list="common-attributes"
+                                    placeholder="Nama Atribut" value="<%= attr.attribute %>"
+                                    class="sm:col-span-4 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                                <select name="op[]"
+                                    class="sm:col-span-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                                    <option value=":=" <%=attr.op===':=' ? 'selected' : '' %>>:=</option>
+                                    <option value="=" <%=attr.op==='=' ? 'selected' : '' %>>=</option>
+                                    <option value="+=" <%=attr.op==='+=' ? 'selected' : '' %>>+=</option>
+                                </select>
+                                <input type="text" name="value[]" placeholder="Nilai Atribut" value="<%= attr.value %>"
+                                    class="sm:col-span-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                                <button type="button"
+                                    class="sm:col-span-1 px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 btn-remove-attr">Hapus</button>
+                            </div>
+                            <% }) %>
+                                <% } else { %>
+                                    <div class="attribute-row grid grid-cols-1 sm:grid-cols-8 gap-2 items-center">
+                                        <input type="text" name="attribute[]" list="common-attributes"
+                                            placeholder="Nama Atribut"
+                                            class="sm:col-span-4 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                                        <select name="op[]"
+                                            class="sm:col-span-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                                            <option value=":=" selected>:=</option>
+                                            <option value="=">=</option>
+                                            <option value="+=">+=</option>
+                                        </select>
+                                        <input type="text" name="value[]" placeholder="Nilai Atribut"
+                                            class="sm:col-span-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+                                        <button type="button"
+                                            class="sm:col-span-1 px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 btn-remove-attr">Hapus</button>
+                                    </div>
+                                    <% } %>
+                </div>
+
+                <datalist id="common-attributes">
+                    <option value="Mikrotik-Rate-Limit">
+                    <option value="Simultaneous-Use">
+                    <option value="Session-Timeout">
+                    <option value="Idle-Timeout">
+                    <option value="Mikrotik-Total-Limit">
+                    <option value="Mikrotik-Address-List">
+                </datalist>
+
+                <button type="button" id="btn-add-attr"
+                    class="mt-4 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Tambah
+                    Atribut</button>
+            </div>
+
+            <div class="pt-5 border-t border-gray-200">
+                <div class="flex justify-end">
+                    <button type="submit"
+                        class="px-6 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700">Simpan
+                        Profil</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="lg:col-span-1">
+        <div class="p-6 bg-blue-50 border border-blue-200 rounded-lg space-y-4">
+            <div>
+                <h4 class="font-semibold text-blue-800">📘 Kamus Atribut</h4>
+                <p class="mt-1 text-sm text-blue-700">Gunakan atribut populer di bawah ini untuk mengatur kebijakan
+                    profil.</p>
+            </div>
+            <div class="guide-item">
+                <h5 class="font-semibold text-gray-800">Mikrotik-Rate-Limit</h5>
+                <p class="text-sm text-gray-600"><strong>Fungsi:</strong> Mengatur kecepatan internet.
+                    <br><strong>Contoh:</strong> <code>1M/5M</code> (Upload 1 Mbps / Download 5 Mbps).</p>
+            </div>
+            <div class="guide-item">
+                <h5 class="font-semibold text-gray-800">Simultaneous-Use</h5>
+                <p class="text-sm text-gray-600"><strong>Fungsi:</strong> Mencegah 1 akun dipakai di banyak perangkat.
+                    <br><strong>Contoh:</strong> <code>1</code> (Hanya 1 perangkat aktif).</p>
+            </div>
+            <div>
+                <h4 class="font-semibold text-blue-800">📖 Kamus Operator</h4>
+                <p class="mt-1 text-sm text-blue-700">Pilih operator yang tepat untuk setiap atribut.</p>
+            </div>
+            <div class="guide-item">
+                <h5 class="font-semibold text-gray-800">Operator `=` (Beri Instruksi)</h5>
+                <p class="text-sm text-gray-600">Paling umum. Digunakan untuk memberi perintah ke MikroTik setelah login
+                    (misal: atur kecepatan).</p>
+            </div>
+            <div class="guide-item">
+                <h5 class="font-semibold text-gray-800">Operator `:=` (Periksa & Tetapkan)</h5>
+                <p class="text-sm text-gray-600">Aturan ketat. Untuk memeriksa kondisi sebelum login (misal: cek jumlah
+                    perangkat).</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('attributes-container');
+
+        document.getElementById('btn-add-attr').addEventListener('click', () => {
+            const newRow = document.createElement('div');
+            newRow.className = 'attribute-row grid grid-cols-1 sm:grid-cols-8 gap-2 items-center';
+            newRow.innerHTML = `
+            <input type="text" name="attribute[]" list="common-attributes" placeholder="Nama Atribut" class="sm:col-span-4 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+            <select name="op[]" class="sm:col-span-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+              <option value=":=" selected>:=</option>
+              <option value="=">=</option>
+              <option value="+=">+=</option>
+            </select>
+            <input type="text" name="value[]" placeholder="Nilai Atribut" class="sm:col-span-2 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm">
+            <button type="button" class="sm:col-span-1 px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 btn-remove-attr">Hapus</button>
+        `;
+            container.appendChild(newRow);
+        });
+
+        container.addEventListener('click', (e) => {
+            if (e.target && e.target.classList.contains('btn-remove-attr')) {
+                e.target.closest('.attribute-row').remove();
+            }
+        });
+    });
+</script>

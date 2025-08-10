@@ -1,0 +1,89 @@
+<div class="flex justify-between items-center">
+    <h1 class="text-3xl font-semibold text-gray-800">
+        <%= pageTitle %>
+    </h1>
+    <a href="/users"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">
+        <i class="bi bi-arrow-left mr-1"></i> Kembali ke Daftar
+    </a>
+</div>
+
+<div class="mt-6 p-6 bg-white rounded-lg shadow-md">
+    <form action="<%= action %>" method="POST">
+        <div class="space-y-6">
+            <div>
+                <label for="username" class="block text-sm font-medium text-gray-700">Username Login Web (NISN)</label>
+                <input type="text" id="username" name="username" value="<%= user ? user.username : '' %>"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm <%= user ? 'bg-gray-100 cursor-not-allowed' : '' %>"
+                    <%=user ? 'readonly' : '' %>
+                required
+                >
+                <% if (user) { %>
+                    <p class="mt-1 text-xs text-gray-500">Username untuk login ke panel web tidak dapat diubah.</p>
+                    <% } %>
+            </div>
+
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700">Password Login Web</label>
+                <input type="password" id="password" name="password"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="••••••••">
+                <p class="mt-1 text-xs text-gray-500">
+                    <%= user ? 'Kosongkan jika tidak ingin mengubah password login web.'
+                        : 'Wajib diisi untuk pengguna baru.' %>
+                </p>
+            </div>
+
+            <div>
+                <label for="groupname" class="block text-sm font-medium text-gray-700">Profil / Grup</label>
+                <select id="groupname" name="groupname"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">-- Tanpa Profil --</option>
+                    <% if (profiles && profiles.length> 0) { %>
+                        <% profiles.forEach(profile=> { %>
+                            <option value="<%= profile.groupname %>" <%=(user && user.groupname===profile.groupname)
+                                ? 'selected' : '' %>>
+                                <%= profile.groupname %>
+                            </option>
+                            <% }) %>
+                                <% } %>
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Tentukan profil kebijakan untuk akun Wi-Fi pengguna ini.</p>
+            </div>
+
+            <div class="pt-6 border-t border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Jadwal Akses Internet (Login-Time)</h3>
+                <p class="mt-1 text-sm text-gray-500">Atur kapan saja pengguna bisa login. Kosongkan untuk akses 24 jam.
+                </p>
+                <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label for="login_time_days" class="block text-sm font-medium text-gray-700">Hari Aktif</label>
+                        <input type="text" name="login_time_days" id="login_time_days"
+                            value="<%= user && user.loginTimeDays ? user.loginTimeDays : '' %>"
+                            placeholder="Contoh: Wk,Sa"
+                            class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500">Kode: Wk, Mo, Tu, We, Th, Fr, Sa, Su. Pisahkan koma.</p>
+                    </div>
+                    <div>
+                        <label for="login_time_hours" class="block text-sm font-medium text-gray-700">Jam Aktif</p>
+                            <input type="text" name="login_time_hours" id="login_time_hours"
+                                value="<%= user && user.loginTimeHours ? user.loginTimeHours : '' %>"
+                                placeholder="Contoh: 0700-1600"
+                                class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <p class="mt-1 text-xs text-gray-500">Format: HHMM-HHMM.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-8 pt-5 border-t border-gray-200">
+            <div class="flex justify-end">
+                <button type="submit"
+                    class="px-6 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Simpan Pengguna
+                </button>
+            </div>
+        </div>
+    </form>
+</div>

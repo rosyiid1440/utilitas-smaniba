@@ -1,0 +1,61 @@
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <h1 class="text-3xl font-semibold text-gray-800">Impor Pengguna dari CSV</h1>
+    <a href="/users"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">
+        <i class="bi bi-arrow-left mr-1"></i> Kembali
+    </a>
+</div>
+
+<% if (message) { %>
+    <div class="mt-6 p-4 rounded-lg <%= message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>"
+        role="alert">
+        <%= message.text %>
+    </div>
+    <% } %>
+
+        <div class="mt-6 p-6 bg-white rounded-lg shadow-md">
+            <div class="prose max-w-none">
+                <h3>Panduan Format File CSV</h3>
+                <p>
+                    Pastikan file CSV Anda memiliki format kolom yang benar dan tidak memiliki baris header. Sistem akan
+                    membaca data mulai dari baris pertama.
+                </p>
+                <p>
+                    Urutan kolom yang dibutuhkan adalah:
+                </p>
+                <pre class="bg-gray-100 p-3 rounded-md text-sm"><code>nis,nisn,nama_lengkap,kelas</code></pre>
+                <ul>
+                    <li><strong>nis:</strong> Akan digunakan sebagai <strong>Username Wi-Fi</strong>.</li>
+                    <li><strong>nisn:</strong> Akan digunakan sebagai <strong>Username & Password Awal</strong> untuk
+                        login ke panel web ini.</li>
+                    <li><strong>nama_lengkap:</strong> Nama lengkap siswa (saat ini tidak disimpan, namun wajib ada).
+                    </li>
+                    <li><strong>kelas:</strong> Kelas detail siswa (saat ini tidak disimpan, namun wajib ada).</li>
+                </ul>
+                <hr>
+            </div>
+
+            <form action="/users/import" method="POST" enctype="multipart/form-data" class="mt-6">
+                <div class="form-group">
+                    <label for="userfile" class="block text-sm font-medium text-gray-700">Pilih File CSV untuk
+                        Diunggah</label>
+                    <div class="mt-2 flex items-center">
+                        <input type="file" id="userfile" name="userfile" accept=".csv" required class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-lg file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-blue-50 file:text-blue-700
+                    hover:file:bg-blue-100">
+                    </div>
+                </div>
+
+                <div class="mt-8 pt-5 border-t border-gray-200">
+                    <div class="flex justify-end">
+                        <button type="submit"
+                            class="px-6 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            Mulai Proses Impor
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>

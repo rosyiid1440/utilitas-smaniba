@@ -1,0 +1,91 @@
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <h1 class="text-3xl font-semibold text-gray-800">Tinjau & Konfigurasi Data</h1>
+    <a href="/sync"
+        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50">
+        <i class="bi bi-x-lg mr-1"></i> Batalkan
+    </a>
+</div>
+<p class="mt-2 text-gray-600">
+    Data berikut berhasil diambil dari API. Atur prefix username Wi-Fi untuk setiap angkatan, lalu klik tombol impor di
+    bagian bawah halaman.
+</p>
+<p class="mt-1 text-sm text-gray-500">Profil Tujuan yang dipilih: <strong class="text-gray-900">
+        <%= target_profile %>
+    </strong></p>
+
+
+<form action="/sync/finalize" method="POST"
+    onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').innerHTML='<i class=\'bi bi-arrow-clockwise animate-spin\'></i> Mengimpor...';">
+    <input type="hidden" name="target_profile" value="<%= target_profile %>">
+
+    <% Object.keys(groupedStudents).sort().forEach(levelName=> { %>
+        <div class="mt-6 bg-white rounded-lg shadow-md overflow-hidden">
+            <div
+                class="p-4 bg-gray-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <%= levelName %> (<%= groupedStudents[levelName].length %> Siswa)
+                </h3>
+                <div class="w-full sm:w-auto">
+                    <label for="prefix-<%= levelName %>" class="sr-only">Prefix Username Wi-Fi</label>
+                    <div class="relative">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                            <span class="text-gray-500 sm:text-sm">#</span>
+                        </div>
+                        <input type="text" name="prefixes[<%= levelName %>]" id="prefix-<%= levelName %>"
+                            placeholder="Prefix (misal: 25)"
+                            class="block w-full rounded-md border-gray-300 pl-7 pr-3 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full whitespace-nowrap">
+                    <thead class="bg-gray-50">
+                        <tr class="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th class="p-4">NISN</th>
+                            <th class="p-4">NIS</th>
+                            <th class="p-4">Nama Lengkap</th>
+                            <th class="p-4">Kelas Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <% groupedStudents[levelName].forEach((student, index)=> { %>
+                            <input type="hidden" name="students[<%= levelName %>-<%= index %>][nisn]"
+                                value="<%= student.nisn %>">
+                            <input type="hidden" name="students[<%= levelName %>-<%= index %>][no_induk]"
+                                value="<%= student.no_induk %>">
+                            <input type="hidden" name="students[<%= levelName %>-<%= index %>][tingkat]"
+                                value="<%= student.id_kelas_detail.tingkat %>">
+
+                            <tr class="text-gray-700 text-sm">
+                                <td class="p-4">
+                                    <%= student.nisn %>
+                                </td>
+                                <td class="p-4 font-medium text-gray-900">
+                                    <%= student.no_induk %>
+                                </td>
+                                <td class="p-4">
+                                    <%= student.nama %>
+                                </td>
+                                <td class="p-4">
+                                    <%= student.id_kelas_detail.kelas %>
+                                </td>
+                            </tr>
+                            <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <% }) %>
+
+            <div class="sticky bottom-0 mt-8 py-4 bg-white/80 backdrop-blur-sm border-t border-gray-200">
+                <div class="container mx-auto px-6 flex justify-end">
+                    <button type="submit"
+                        class="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        onclick="return confirm('Apakah Anda yakin ingin mengimpor semua data ini ke database? Aksi ini akan membuat atau memperbarui akun berdasarkan konfigurasi di atas.')">
+                        <i class="bi bi-check-circle-fill mr-2"></i>
+                        Impor Semua Data & Buat Akun
+                    </button>
+                </div>
+            </div>
+</form>

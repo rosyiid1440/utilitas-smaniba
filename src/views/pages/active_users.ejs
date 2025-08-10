@@ -1,0 +1,70 @@
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <h1 class="text-3xl font-semibold text-gray-800">Pengguna Aktif</h1>
+</div>
+
+<% if (message) { %>
+    <div class="mt-6 p-4 rounded-lg <%= message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>"
+        role="alert">
+        <%= message.text %>
+    </div>
+    <% } %>
+
+        <div class="mt-6 bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full whitespace-nowrap">
+                    <thead class="bg-gray-50">
+                        <tr class="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            <th class="p-4">Username</th>
+                            <th class="p-4">Alamat IP</th>
+                            <th class="p-4">Alamat MAC</th>
+                            <th class="p-4">Waktu Login</th>
+                            <th class="p-4">Router (NAS)</th>
+                            <th class="p-4 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <% if (activeUsers && activeUsers.length> 0) { %>
+                            <% activeUsers.forEach(user=> { %>
+                                <tr class="text-gray-700 hover:bg-gray-50">
+                                    <td class="p-4 text-sm font-medium text-gray-900">
+                                        <%= user.username %>
+                                    </td>
+                                    <td class="p-4 text-sm">
+                                        <%= user.framedipaddress %>
+                                    </td>
+                                    <td class="p-4 text-sm">
+                                        <%= user.callingstationid %>
+                                    </td>
+                                    <td class="p-4 text-sm">
+                                        <%= new Date(user.acctstarttime).toLocaleString('id-ID', { dateStyle: 'medium' ,
+                                            timeStyle: 'short' }) %>
+                                    </td>
+                                    <td class="p-4 text-sm">
+                                        <%= user.nasipaddress %>
+                                    </td>
+                                    <td class="p-4 text-sm text-right">
+                                        <form action="/active-users/disconnect" method="POST"
+                                            onsubmit="return confirm('Yakin ingin memutuskan sesi pengguna ini?')">
+                                            <input type="hidden" name="username" value="<%= user.username %>">
+                                            <input type="hidden" name="nasipaddress" value="<%= user.nasipaddress %>">
+                                            <input type="hidden" name="framedipaddress"
+                                                value="<%= user.framedipaddress %>">
+                                            <button type="submit"
+                                                class="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                                Putuskan
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="6" class="p-6 text-center text-gray-500">
+                                                Saat ini tidak ada pengguna yang sedang online.
+                                            </td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>

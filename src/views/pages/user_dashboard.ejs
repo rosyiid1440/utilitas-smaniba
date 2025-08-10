@@ -1,0 +1,97 @@
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <h1 class="text-3xl font-semibold text-gray-800">Dashboard Pengguna</h1>
+</div>
+<p class="mt-2 text-gray-600">
+    Selamat datang, <span class="font-medium text-gray-900">
+        <%= user.username %>
+    </span>. Di halaman ini Anda dapat melihat informasi akun dan mengubah password Wi-Fi Anda.
+</p>
+
+
+<div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <div class="lg:col-span-2">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-semibold text-gray-800">Ubah Password Wi-Fi Anda</h3>
+            <p class="mt-1 text-sm text-gray-500">Gunakan form ini untuk mengubah atau mereset password koneksi Wi-Fi
+                Anda.</p>
+
+            <% if (locals.error) { %>
+                <div class="mt-4 p-4 text-sm rounded-md bg-red-100 text-red-800" role="alert">
+                    <%= error %>
+                </div>
+                <% } %>
+                    <% if (locals.query && locals.query.status==='success' ) { %>
+                        <div class="mt-4 p-4 text-sm rounded-md bg-green-100 text-green-800" role="alert">Password Wi-Fi
+                            berhasil diubah. Silakan gunakan password baru untuk login Wi-Fi.</div>
+                        <% } %>
+
+                            <form action="/user-dashboard/change-password" method="POST" class="mt-6 space-y-6">
+                                <div>
+                                    <label for="new_password" class="block text-sm font-medium text-gray-700">Password
+                                        Wi-Fi Baru</label>
+                                    <input type="text" id="new_password" name="new_password" required
+                                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div>
+                                    <label for="confirm_password"
+                                        class="block text-sm font-medium text-gray-700">Konfirmasi Password Wi-Fi
+                                        Baru</label>
+                                    <input type="text" id="confirm_password" name="confirm_password" required
+                                        class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                </div>
+                                <div class="pt-5 border-t border-gray-200">
+                                    <div class="flex justify-end">
+                                        <button type="submit"
+                                            class="px-6 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                            Ubah Password Wi-Fi
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+        </div>
+    </div>
+
+    <div class="lg:col-span-1">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-4">
+                <i class="bi bi-person-badge-fill mr-2"></i>Informasi Akun Anda
+            </h3>
+
+            <div class="mt-4 space-y-4">
+                <div>
+                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Akun Login Panel Web</h4>
+                    <div class="mt-2 text-sm">
+                        <div class="flex justify-between py-1">
+                            <span class="text-gray-600">Username:</span>
+                            <span class="font-medium text-gray-900">
+                                <%= user.username %>
+                            </span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-gray-600">Password:</span>
+                            <span class="font-medium text-gray-900">(Sesuai yang Anda masukkan)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-200">
+                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Akun Koneksi Wi-Fi</h4>
+                    <div class="mt-2 text-sm">
+                        <div class="flex justify-between py-1">
+                            <span class="text-gray-600">Username Wi-Fi:</span>
+                            <span class="font-medium text-gray-900">
+                                <%= user.radius_username %>
+                            </span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-gray-600">Password Wi-Fi:</span>
+                            <code
+                                class="px-2 py-1 bg-gray-200 rounded text-gray-800 text-base font-semibold"><%= wifiPassword %></code>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

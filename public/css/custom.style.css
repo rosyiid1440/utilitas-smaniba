@@ -1,0 +1,9 @@
+/* public/css/custom.style.css */
+.card-header-icon {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+}
+
+.table-responsive {
+    margin-top: 1rem;
+}
