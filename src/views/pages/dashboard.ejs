@@ -1,56 +1,98 @@
-<h1 class="text-3xl font-semibold text-gray-700">Dashboard Sekolah</h1>
-<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mt-6">
-    <div class="p-6 bg-white rounded-lg shadow-md">
-        <div class="flex items-start">
-            <div class="p-3 bg-blue-100 text-blue-500 rounded-full">
-                <i class="bi bi-people-fill text-2xl"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500">Total Akun</p>
-                <p class="text-3xl font-bold text-gray-800">
-                    <%= stats.totalUsers %>
-                </p>
-            </div>
+<h1 class="text-3xl font-semibold text-gray-700">Dashboard Analitik</h1>
+<p class="mt-2 text-gray-600">Visualisasi data penggunaan jaringan hotspot sekolah.</p>
+
+<div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-700">Aktivitas Pengguna (24 Jam Terakhir)</h3>
+        <div class="mt-4 h-64">
+            <canvas id="onlineUsersChart"></canvas>
         </div>
     </div>
-    <div class="p-6 bg-white rounded-lg shadow-md">
-        <div class="flex items-start">
-            <div class="p-3 bg-green-100 text-green-500 rounded-full">
-                <i class="bi bi-person-check-fill text-2xl"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500">Siswa Online</p>
-                <p class="text-3xl font-bold text-gray-800">
-                    <%= stats.onlineStudents %>
-                </p>
-            </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-700">Total Penggunaan Data (7 Hari Terakhir)</h3>
+        <div class="mt-4 h-64">
+            <canvas id="dailyUsageChart"></canvas>
         </div>
     </div>
-    <div class="p-6 bg-white rounded-lg shadow-md">
-        <div class="flex items-start">
-            <div class="p-3 bg-yellow-100 text-yellow-500 rounded-full">
-                <i class="bi bi-person-video3 text-2xl"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500">Guru Online</p>
-                <p class="text-3xl font-bold text-gray-800">
-                    <%= stats.onlineTeachers %>
-                </p>
-            </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-700">Top 5 Pengguna Data (7 Hari Terakhir)</h3>
+        <div class="mt-4 h-64 flex justify-center items-center">
+            <canvas id="topUsersChart"></canvas>
         </div>
     </div>
-    <div class="p-6 bg-white rounded-lg shadow-md">
-        <div class="flex items-start">
-            <div class="p-3 bg-indigo-100 text-indigo-500 rounded-full">
-                <i class="bi bi-graph-up-arrow text-2xl"></i>
-            </div>
-            <div class="ml-4">
-                <p class="text-sm font-medium text-gray-500">Top Pengguna Hari Ini</p>
-                <p class="text-lg font-bold text-gray-800 truncate">
-                    <%= stats.topUserData.username %>
-                </p>
-                <p class="text-sm text-gray-600">(<%= (stats.topUserData.totalusage / 1024 / 1024).toFixed(2) %> MB)</p>
-            </div>
+
+    <div class="bg-white p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold text-gray-700">Distribusi Pengguna Online per Profil</h3>
+        <div class="mt-4 h-64 flex justify-center items-center">
+            <canvas id="profileDistributionChart"></canvas>
         </div>
     </div>
 </div>
+
+<script>
+    // Fungsi pembantu generik
+    function renderChart(canvasId, chartConfig) {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        new Chart(ctx, chartConfig);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Grafik #1: Pengguna Online per Jam (Line)
+        fetch('/api/reports/online-users-hourly')
+            .then(response => response.json())
+            .then(chartData => {
+                renderChart('onlineUsersChart', {
+                    type: 'line',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{ label: 'Jumlah Pengguna', data: chartData.data, backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgba(59, 130, 246, 1)', borderWidth: 2, fill: true, tension: 0.3 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                });
+            });
+
+        // Grafik #2: Penggunaan Data Harian (Bar)
+        fetch('/api/reports/daily-usage')
+            .then(response => response.json())
+            .then(chartData => {
+                renderChart('dailyUsageChart', {
+                    type: 'bar',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{ label: 'Total Penggunaan (GB)', data: chartData.data, backgroundColor: 'rgba(22, 163, 74, 0.5)', borderColor: 'rgba(22, 163, 74, 1)', borderWidth: 1 }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
+                });
+            });
+
+        // [BARU] Grafik #3: Top Pengguna (Pie)
+        fetch('/api/reports/top-data-users')
+            .then(response => response.json())
+            .then(chartData => {
+                renderChart('topUsersChart', {
+                    type: 'pie',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{ label: 'Penggunaan (GB)', data: chartData.data }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            });
+
+        // [BARU] Grafik #4: Distribusi Profil (Doughnut)
+        fetch('/api/reports/profile-distribution')
+            .then(response => response.json())
+            .then(chartData => {
+                renderChart('profileDistributionChart', {
+                    type: 'doughnut',
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{ label: 'Jumlah Pengguna', data: chartData.data }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            });
+    });
+</script>

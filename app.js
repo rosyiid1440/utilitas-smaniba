@@ -14,6 +14,9 @@ const profileRoutes = require('./src/routes/profileRoutes');
 const nasRoutes = require('./src/routes/nasRoutes');
 const activeRoutes = require('./src/routes/activeRoutes');
 const syncRoutes = require('./src/routes/syncRoutes');
+const webappUserRoutes = require('./src/routes/webappUserRoutes');
+const reportApiRoutes = require('./src/routes/reportApiRoutes');
+const authLogRoutes = require('./src/routes/authLogRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -59,6 +62,9 @@ app.use('/nas', authMiddleware.isLoggedIn, authMiddleware.isAdmin, nasRoutes);
 app.use('/active-users', authMiddleware.isLoggedIn, authMiddleware.isAdmin, activeRoutes);
 app.use('/sync', authMiddleware.isLoggedIn, authMiddleware.isAdmin, syncRoutes); // TAMBAHKAN INI
 app.use('/dashboard-admin', authMiddleware.isLoggedIn, authMiddleware.isAdmin, reportRoutes);
+app.use('/webapp-users', authMiddleware.isLoggedIn, authMiddleware.isAdmin, webappUserRoutes);
+app.use('/api/reports', authMiddleware.isLoggedIn, authMiddleware.isAdmin, reportApiRoutes);
+app.use('/auth-logs', authMiddleware.isLoggedIn, authMiddleware.isAdmin, authLogRoutes);
 
 // Redirect halaman utama berdasarkan peran
 app.get('/', authMiddleware.isLoggedIn, (req, res) => {

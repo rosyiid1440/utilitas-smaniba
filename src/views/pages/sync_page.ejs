@@ -1,5 +1,5 @@
 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-    <h1 class="text-3xl font-semibold text-gray-800">Sinkronisasi Data Siswa</h1>
+    <h1 class="text-3xl font-semibold text-gray-800">Sinkronisasi Data</h1>
 </div>
 
 <% if (message) { %>
@@ -9,47 +9,74 @@
     </div>
     <% } %>
 
-        <div class="mt-6 p-6 bg-white rounded-lg shadow-md">
-            <div class="prose max-w-none prose-sm sm:prose-base">
-                <h3>Sinkronisasi Otomatis dari Data Master</h3>
-                <p>
-                    Proses ini akan mengambil data siswa terbaru dari API Data Master sekolah. Sistem akan menyiapkan
-                    data untuk membuat atau memperbarui akun Wi-Fi serta akun login panel untuk setiap siswa aktif.
+        <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold text-gray-800"><i class="bi bi-people-fill mr-2"></i>Sinkronisasi Data
+                    Siswa</h3>
+                <p class="mt-2 text-sm text-gray-600">
+                    Mengambil data dari API siswa dan menyiapkan akun untuk ditinjau sebelum impor final.
                 </p>
-                <p>
-                    Anda akan diarahkan ke halaman tinjau untuk mengatur prefix username Wi-Fi (misalnya berdasarkan
-                    tahun angkatan) sebelum data dimasukkan secara permanen ke database.
-                </p>
+                <form action="/sync/students" method="POST" class="mt-6"
+                    onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').innerHTML='Memproses...';">
+                    <div class="form-group">
+                        <label for="student_target_profile" class="block text-base font-medium text-gray-800">Pilih
+                            Profil Tujuan Siswa</label>
+                        <select id="student_target_profile" name="target_profile" required
+                            class="mt-2 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="" disabled selected>-- Wajib Pilih Profil --</option>
+                            <% if (profiles && profiles.length> 0) { %>
+                                <% profiles.forEach(profile=> { %>
+                                    <option value="<%= profile.groupname %>">
+                                        <%= profile.groupname %>
+                                    </option>
+                                    <% }) %>
+                                        <% } %>
+                        </select>
+                    </div>
+                    <div class="mt-6 pt-5 border-t border-gray-200">
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                class="w-full px-6 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700">
+                                Ambil Data Siswa &raquo;
+                            </button>
+                        </div>
+                    </div>
+                </form>
             </div>
 
-            <form action="/sync" method="POST" class="mt-6"
-                onsubmit="this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').innerHTML='Memproses...';">
-
-                <div class="border-t border-gray-200 pt-6">
-                    <label for="target_profile" class="block text-base font-medium text-gray-800">Langkah 1: Pilih
-                        Profil Tujuan</label>
-                    <p class="mt-1 text-sm text-gray-500">Semua siswa yang disinkronkan akan dimasukkan ke dalam profil
-                        kebijakan yang Anda pilih di bawah ini.</p>
-                    <select id="target_profile" name="target_profile" required
-                        class="mt-2 block w-full sm:w-1/2 px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                        <option value="" disabled selected>-- Wajib Pilih Profil --</option>
-                        <% if (profiles && profiles.length> 0) { %>
-                            <% profiles.forEach(profile=> { %>
-                                <option value="<%= profile.groupname %>">
-                                    <%= profile.groupname %>
-                                </option>
-                                <% }) %>
-                                    <% } %>
-                    </select>
-                </div>
-
-                <div class="mt-8 pt-5 border-t border-gray-200">
-                    <div class="flex justify-end">
-                        <button type="submit"
-                            class="px-6 py-2 text-base font-medium text-white bg-blue-600 border border-transparent rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Ambil Data & Lanjutkan ke Tinjauan &raquo;
-                        </button>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-xl font-semibold text-gray-800"><i class="bi bi-person-video3 mr-2"></i>Sinkronisasi
+                    Data Guru</h3>
+                <p class="mt-2 text-sm text-gray-600">
+                    Proses ini akan langsung membuat atau memperbarui akun guru berdasarkan data dari API.
+                </p>
+                <form action="/sync/teachers" method="POST"
+                    onsubmit="return confirm('Yakin ingin memulai sinkronisasi data guru?'); this.querySelector('button[type=submit]').disabled=true; this.querySelector('button[type=submit]').innerHTML='<i class=\'bi bi-arrow-clockwise animate-spin\'></i> Mengimpor...';">
+                    <div class="form-group">
+                        <label for="teacher_target_profile" class="block text-base font-medium text-gray-800">Pilih
+                            Profil Tujuan Guru</label>
+                        <select id="teacher_target_profile" name="target_profile" required
+                            class="mt-2 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                            <option value="" disabled selected>-- Wajib Pilih Profil --</option>
+                            <% if (profiles && profiles.length> 0) { %>
+                                <% profiles.forEach(profile=> { %>
+                                    <option value="<%= profile.groupname %>">
+                                        <%= profile.groupname %>
+                                    </option>
+                                    <% }) %>
+                                        <% } %>
+                        </select>
                     </div>
-                </div>
-            </form>
+                    <div class="mt-6 pt-5 border-t border-gray-200">
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                class="w-full px-6 py-2 text-base font-medium text-white bg-green-600 border border-transparent rounded-lg shadow-sm hover:bg-green-700">
+                                Sinkronkan Data Guru Sekarang
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
         </div>

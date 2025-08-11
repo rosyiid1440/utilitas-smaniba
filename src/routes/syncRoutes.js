@@ -6,10 +6,11 @@ const syncController = require('../controllers/syncController');
 // Halaman untuk menampilkan tombol sinkronisasi
 router.get('/', syncController.showSyncPage);
 
-// Rute untuk menjalankan proses sinkronisasi
-router.post('/', syncController.runSync);
+// Rute untuk SINKRONISASI SISWA
+router.post('/students', syncController.runStudentSync);
+router.post('/students/finalize', syncController.finalizeStudentSync);
 
-// Menjalankan LANGKAH 2: Proses data dari halaman review dan impor ke DB
-router.post('/finalize', syncController.finalizeSync);
+// Rute untuk SINKRONISASI GURU
+router.post('/teachers', syncController.runTeacherSync);
 
 module.exports = router;

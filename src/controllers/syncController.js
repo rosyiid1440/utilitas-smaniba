@@ -125,7 +125,7 @@ exports.showSyncPage = async (req, res) => {
 // };
 
 // LANGKAH 1: MENGAMBIL DATA DARI API DAN MENAMPILKAN HALAMAN REVIEW
-exports.runSync = async (req, res) => {
+exports.runStudentSync = async (req, res) => {
     const API_URL = 'https://data-master.sman1balongpanggang.sch.id/api/siswa';
     const { target_profile } = req.body; // Ambil profil yang dipilih
 
@@ -175,7 +175,7 @@ exports.runSync = async (req, res) => {
 };
 
 // LANGKAH 2: MEMPROSES DATA DARI HALAMAN REVIEW DAN MEMASUKKAN KE DATABASE
-exports.finalizeSync = async (req, res) => {
+exports.finalizeStudentSync = async (req, res) => {
     const { students, prefixes, target_profile } = req.body;
 
     if (!students) {
@@ -235,5 +235,83 @@ exports.finalizeSync = async (req, res) => {
         res.redirect(`/sync?type=error&message=${encodeURIComponent(dbError.message)}`);
     } finally {
         connection.release();
+    }
+};
+
+exports.runTeacherSync = async (req, res) => {
+    const API_URL = 'https://data-master.sman1balongpanggang.sch.id/api/guru';
+    const { target_profile } = req.body;
+
+    if (!target_profile) {
+        return res.redirect(`/sync?type=error&message=Anda harus memilih profil tujuan untuk guru.`);
+    }
+
+    try {
+        const fetchOptions = {
+            method: 'GET',
+            headers: { 'Authorization': `${process.env.API_MASTER_TOKEN}` }
+        };
+        const apiResponse = await fetch(API_URL, fetchOptions);
+        if (!apiResponse.ok) throw new Error(`API Guru Error: Status ${apiResponse.status}`);
+
+        const teachers = await apiResponse.json();
+        if (!Array.isArray(teachers)) throw new Error('Data API guru tidak valid.');
+
+        const connection = await db.getConnection();
+        let addedCount = 0, updatedCount = 0, skippedCount = 0;
+
+        try {
+            await connection.beginTransaction();
+
+            for (const teacher of teachers) {
+                if (teacher.status !== 'Aktif' || !teacher.nama || !teacher.id_guru) {
+                    skippedCount++;
+                    continue;
+                }
+
+                // --- PERUBAHAN UTAMA DI SINI ---
+                // Mengambil nama depan, membersihkan, dan menggabungkannya dengan id_guru
+                const firstName = teacher.nama.split(' ')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+                const uniqueIdentifier = `${firstName}${teacher.id_guru}`;
+
+                const webUsername = uniqueIdentifier;
+                const radiusUsername = uniqueIdentifier;
+
+                const [existingUser] = await connection.execute("SELECT id FROM webapp_users WHERE username = ?", [webUsername]);
+                const isUpdate = existingUser.length > 0;
+
+                const wifiPassword = Math.random().toString(36).substring(2, 10);
+
+                await connection.execute("DELETE FROM radcheck WHERE username = ?", [radiusUsername]);
+                await connection.execute("DELETE FROM radusergroup WHERE username = ?", [radiusUsername]);
+
+                await connection.execute("INSERT INTO radcheck (username, attribute, op, value) VALUES (?, 'Cleartext-Password', ':=', ?)", [radiusUsername, wifiPassword]);
+                await connection.execute("INSERT INTO radusergroup (username, groupname) VALUES (?, ?)", [radiusUsername, target_profile]);
+
+                if (isUpdate) {
+                    await connection.execute("UPDATE webapp_users SET radius_username = ? WHERE username = ?", [radiusUsername, webUsername]);
+                    updatedCount++;
+                } else {
+                    const webPassword = webUsername; // Password login web awal = username baru
+                    const hashedPassword = await bcrypt.hash(webPassword, 10);
+                    await connection.execute("INSERT INTO webapp_users (username, password, radius_username, role) VALUES (?, ?, ?, 'user')", [webUsername, hashedPassword, radiusUsername]);
+                    addedCount++;
+                }
+            }
+
+            await connection.commit();
+            const successMessage = `Sinkronisasi Guru Selesai. Baru: ${addedCount}, Diperbarui: ${updatedCount}, Dilewati: ${skippedCount}.`;
+            res.redirect(`/sync?type=success&message=${encodeURIComponent(successMessage)}`);
+
+        } catch (dbError) {
+            await connection.rollback();
+            throw dbError;
+        } finally {
+            connection.release();
+        }
+
+    } catch (error) {
+        console.error('Teacher sync process failed:', error);
+        res.redirect(`/sync?type=error&message=${encodeURIComponent(error.message)}`);
     }
 };

@@ -1,0 +1,60 @@
+<div class="flex justify-between items-center">
+    <h1 class="text-3xl font-semibold text-gray-800">Log Autentikasi Pengguna</h1>
+</div>
+<p class="mt-2 text-gray-600">Menampilkan riwayat upaya login (berhasil dan gagal) dari semua pengguna.</p>
+
+<div class="mt-6 bg-white rounded-lg shadow overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full whitespace-nowrap">
+            <thead class="bg-gray-50">
+                <tr class="text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    <th class="p-4">Waktu</th>
+                    <th class="p-4">Username</th>
+                    <th class="p-4">Status</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                <% if (logs && logs.length> 0) { %>
+                    <% logs.forEach(log=> { %>
+                        <tr class="text-gray-700 text-sm">
+                            <td class="p-4">
+                                <%= new Date(log.authdate).toLocaleString('id-ID', { dateStyle: 'medium' ,
+                                    timeStyle: 'short' }) %>
+                            </td>
+                            <td class="p-4 font-medium text-gray-900">
+                                <%= log.username %>
+                            </td>
+                            <td class="p-4">
+                            </td>
+                        </tr>
+                        <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="3" class="p-6 text-center text-gray-500">Belum ada log autentikasi.
+                                    </td>
+                                </tr>
+                                <% } %>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<% if (totalPages> 1) { %>
+    <nav class="flex justify-center mt-6" aria-label="Pagination">
+        <% const window=2; const baseQuery=``; // Tidak ada filter untuk saat ini %>
+            <a href="?page=<%= currentPage - 1 %><%= baseQuery %>"
+                class="px-3 py-2 mx-1 rounded-md text-sm font-medium <%= currentPage === 1 ? 'text-gray-400 bg-gray-200 pointer-events-none' : 'text-gray-700 bg-white hover:bg-gray-50' %>">&laquo;</a>
+            <% let lastRenderedPage=0; for(let i=1; i <=totalPages; i++) { const shouldRender=(i===1) ||
+                (i===totalPages) || (i>= currentPage - window && i <= currentPage + window); if (shouldRender) { if (i>
+                    lastRenderedPage + 1) { %><span
+                        class="px-3 py-2 mx-1 rounded-md text-sm font-medium text-gray-500 bg-white">...</span>
+                    <% } %>
+                        <a href="?page=<%= i %><%= baseQuery %>"
+                            class="px-3 py-2 mx-1 rounded-md text-sm font-medium <%= i === currentPage ? 'text-white bg-blue-600 z-10' : 'text-gray-700 bg-white hover:bg-gray-50' %>">
+                            <%= i %>
+                        </a>
+                        <% lastRenderedPage=i; } } %>
+                            <a href="?page=<%= currentPage + 1 %><%= baseQuery %>"
+                                class="px-3 py-2 mx-1 rounded-md text-sm font-medium <%= currentPage === totalPages ? 'text-gray-400 bg-gray-200 pointer-events-none' : 'text-gray-700 bg-white hover:bg-gray-50' %>">&raquo;</a>
+    </nav>
+    <% } %>
