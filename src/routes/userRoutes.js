@@ -30,4 +30,6 @@ router.post('/import', upload.single('userfile'), userController.importFromCsv);
 
 router.post('/batch-action', userController.batchAction);
 
+router.get('/export/csv', userController.exportUsersCsv);
+
 module.exports = router;

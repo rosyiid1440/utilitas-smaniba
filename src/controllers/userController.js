@@ -1,6 +1,7 @@
 const db = require('../config/database');
 const fs = require('fs');
 const csv = require('csv-parser');
+const { stringify } = require('csv-stringify');
 
 // Menampilkan daftar semua pengguna
 exports.listUsers = async (req, res) => {
@@ -402,5 +403,66 @@ exports.batchAction = async (req, res) => {
         res.redirect(`/users?type=error&message=${error.message}`);
     } finally {
         connection.release();
+    }
+};
+
+exports.exportUsersCsv = async (req, res) => {
+    try {
+        const { filter_username, filter_groupname } = req.query;
+
+        // Logika filter sama persis seperti di fungsi listUsers
+        let whereClauses = ["rc.attribute = 'Cleartext-Password'"];
+        let queryParams = [];
+        if (filter_username) {
+            whereClauses.push("rc.username LIKE ?");
+            queryParams.push(`%${filter_username}%`);
+        }
+        if (filter_groupname) {
+            whereClauses.push(`(SELECT groupname FROM radusergroup WHERE username = rc.username LIMIT 1) = ?`);
+            queryParams.push(filter_groupname);
+        }
+        const whereSql = whereClauses.join(' AND ');
+
+        // Query untuk mengambil SEMUA pengguna yang cocok (tanpa LIMIT/pagination)
+        const query = `
+            SELECT 
+                wu.username AS nisn,
+                rc.username, 
+                MAX(rc.value) AS password,
+                (SELECT groupname FROM radusergroup WHERE username = rc.username LIMIT 1) AS groupname
+            FROM radcheck rc
+            LEFT JOIN webapp_users wu ON rc.username = wu.radius_username
+            WHERE ${whereSql}
+            GROUP BY rc.username, wu.username
+            ORDER BY rc.username ASC
+        `;
+        const [users] = await db.query(query, queryParams);
+
+        // Siapkan header untuk file CSV
+        const columns = [
+            "NISN (Login Web)",
+            "Username Wi-Fi (NIS)",
+            "Password Wi-Fi",
+            "Profil"
+        ];
+
+        // Atur header response agar browser men-download file
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="daftar-pengguna-wifi-${Date.now()}.csv"`);
+
+        // Buat dan kirim data CSV
+        stringify(users, {
+            header: true,
+            columns: {
+                nisn: columns[0],
+                username: columns[1],
+                password: columns[2],
+                groupname: columns[3]
+            }
+        }).pipe(res);
+
+    } catch (error) {
+        console.error("Gagal mengekspor data:", error);
+        res.status(500).send("Terjadi kesalahan saat membuat file ekspor.");
     }
 };
