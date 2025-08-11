@@ -11,6 +11,7 @@
                     <th class="p-4">Waktu</th>
                     <th class="p-4">Username</th>
                     <th class="p-4">Status</th>
+                    <th class="p-4">Keterangan</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -25,12 +26,22 @@
                                 <%= log.username %>
                             </td>
                             <td class="p-4">
+                                <% if (log.reply==='Access-Accept' ) { %>
+                                    <span
+                                        class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-full">Berhasil</span>
+                                    <% } else { %>
+                                        <span
+                                            class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-full">Gagal</span>
+                                        <% } %>
+                            </td>
+                            <td class="p-4 text-gray-600">
+                                <%= log.reason || '-' %>
                             </td>
                         </tr>
                         <% }) %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="3" class="p-6 text-center text-gray-500">Belum ada log autentikasi.
+                                    <td colspan="4" class="p-6 text-center text-gray-500">Belum ada log autentikasi.
                                     </td>
                                 </tr>
                                 <% } %>

@@ -12,7 +12,7 @@ exports.viewAuthLogs = async (req, res) => {
         const totalPages = Math.ceil(totalLogs / limit);
 
         const [logs] = await db.query(
-            "SELECT username, reply, authdate FROM radpostauth ORDER BY id DESC LIMIT ? OFFSET ?",
+            "SELECT username, reply, reason, authdate FROM radpostauth ORDER BY id DESC LIMIT ? OFFSET ?",
             [limit, offset]
         );
 
