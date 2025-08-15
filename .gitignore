@@ -3,6 +3,7 @@
 
 # Environment variables
 .env
+keycloak.json
 
 # Logs
 *.log
