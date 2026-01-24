@@ -76,6 +76,8 @@
                         required>
                         <option value="" disabled selected>-- Pilih Aksi Massal --</option>
                         <option value="change_profile">Ubah Profil Terpilih</option>
+                        <option value="reset_password_by_prefix">Reset Password Berdasarkan Prefix Tahun</option>
+                        <option value="reset_password_by_profile">Reset Password Berdasarkan Profil</option>
                         <option value="delete_selected">Hapus Pengguna Terpilih</option>
                         <option value="delete_by_group">Hapus Semua di Profil</option>
                     </select>
@@ -90,6 +92,8 @@
                                 <% }) %>
                                     <% } %>
                     </select>
+                    <input type="text" name="password_prefix" id="password-prefix-input" placeholder="Contoh: 2025"
+                        class="w-full sm:w-auto px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm hidden">
                     <button type="submit"
                         class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-gray-800 rounded-lg hover:bg-gray-900">Terapkan</button>
                 </div>
@@ -179,18 +183,29 @@
                     document.addEventListener('DOMContentLoaded', () => {
                         const actionSelect = document.getElementById('batch-action-select');
                         const profileSelect = document.getElementById('target-profile-select');
+                        const prefixInput = document.getElementById('password-prefix-input');
                         const batchForm = document.getElementById('batch-form');
                         const selectAllCheckbox = document.getElementById('select-all-checkbox');
                         const userCheckboxes = document.querySelectorAll('.user-checkbox');
 
-                        // Tampilkan/sembunyikan dropdown profil berdasarkan aksi yang dipilih
+                        // Tampilkan/sembunyikan input berdasarkan aksi yang dipilih
                         actionSelect.addEventListener('change', () => {
+                            // Reset semua input
+                            profileSelect.classList.add('hidden');
+                            profileSelect.required = false;
+                            prefixInput.classList.add('hidden');
+                            prefixInput.required = false;
+
+                            // Tampilkan input yang sesuai
                             if (actionSelect.value === 'change_profile' || actionSelect.value === 'delete_by_group') {
                                 profileSelect.classList.remove('hidden');
                                 profileSelect.required = true;
-                            } else {
-                                profileSelect.classList.add('hidden');
-                                profileSelect.required = false;
+                            } else if (actionSelect.value === 'reset_password_by_profile') {
+                                profileSelect.classList.remove('hidden');
+                                profileSelect.required = true;
+                            } else if (actionSelect.value === 'reset_password_by_prefix') {
+                                prefixInput.classList.remove('hidden');
+                                prefixInput.required = true;
                             }
                         });
 
@@ -199,13 +214,38 @@
                             const selectedAction = actionSelect.options[actionSelect.selectedIndex].text;
                             const selectedUsers = document.querySelectorAll('.user-checkbox:checked').length;
 
+                            // Validasi untuk aksi yang memerlukan user terpilih
                             if ((actionSelect.value === 'change_profile' || actionSelect.value === 'delete_selected') && selectedUsers === 0) {
                                 alert('Anda harus memilih setidaknya satu pengguna untuk aksi ini.');
                                 e.preventDefault();
                                 return;
                             }
 
-                            if (!confirm(`Apakah Anda yakin ingin melakukan aksi "${selectedAction}"? Aksi ini tidak dapat dibatalkan.`)) {
+                            // Validasi untuk reset password by prefix
+                            if (actionSelect.value === 'reset_password_by_prefix' && !prefixInput.value.trim()) {
+                                alert('Anda harus mengisi prefix tahun.');
+                                e.preventDefault();
+                                return;
+                            }
+
+                            // Validasi untuk aksi yang memerlukan profil
+                            if ((actionSelect.value === 'delete_by_group' || actionSelect.value === 'reset_password_by_profile') && !profileSelect.value) {
+                                alert('Anda harus memilih profil.');
+                                e.preventDefault();
+                                return;
+                            }
+
+                            // Pesan konfirmasi khusus untuk reset password
+                            let confirmMessage = `Apakah Anda yakin ingin melakukan aksi "${selectedAction}"?`;
+                            if (actionSelect.value === 'reset_password_by_prefix') {
+                                confirmMessage = `Apakah Anda yakin ingin mereset password semua pengguna dengan prefix "${prefixInput.value}"? Password baru akan digenerate secara acak.`;
+                            } else if (actionSelect.value === 'reset_password_by_profile') {
+                                const profileName = profileSelect.options[profileSelect.selectedIndex].text;
+                                confirmMessage = `Apakah Anda yakin ingin mereset password semua pengguna di profil "${profileName}"? Password baru akan digenerate secara acak.`;
+                            }
+                            confirmMessage += '\n\nAksi ini tidak dapat dibatalkan.';
+
+                            if (!confirm(confirmMessage)) {
                                 e.preventDefault();
                             }
                         });

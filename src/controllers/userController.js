@@ -270,6 +270,74 @@ exports.showImportForm = (req, res) => {
 };
 
 // Fungsi untuk memproses file CSV
+// exports.importFromCsv = async (req, res) => {
+//     if (!req.file) {
+//         return res.redirect('/users/import?type=error&message=File tidak ditemukan.');
+//     }
+
+//     const results = [];
+//     const filePath = req.file.path;
+
+//     fs.createReadStream(filePath)
+//         .pipe(csv({ headers: ['nisn', 'nama_lengkap', 'kelas'], skipLines: 1 }))
+//         .on('data', (data) => results.push(data))
+//         .on('end', async () => {
+//             fs.unlinkSync(filePath);
+
+//             if (results.length === 0) {
+//                 return res.redirect('/users/import?type=error&message=File CSV kosong atau format salah.');
+//             }
+
+//             const connection = await db.getConnection();
+//             try {
+//                 await connection.beginTransaction();
+//                 for (const user of results) {
+//                     const webUsername = user.nisn.trim(); // Username untuk login web
+//                     const radiusUsername = user.nis.trim(); // Username untuk Wi-Fi
+//                     const groupname = user.kelas.trim();
+
+//                     if (!webUsername || !groupname) continue;
+
+//                     // 1. Buat password acak untuk Wi-Fi
+//                     const wifiPassword = Math.random().toString(36).substring(2, 10);
+
+//                     // 2. Buat password untuk login web (awalnya sama dengan NISN) dan hash
+//                     const webPassword = webUsername;
+//                     const hashedPassword = await bcrypt.hash(webPassword, 10);
+
+//                     // Hapus data lama untuk menghindari duplikat di semua tabel
+//                     await connection.execute("DELETE FROM radcheck WHERE username = ?", [radiusUsername]);
+//                     await connection.execute("DELETE FROM radusergroup WHERE username = ?", [radiusUsername]);
+//                     await connection.execute("DELETE FROM webapp_users WHERE username = ?", [webUsername]);
+
+//                     // 3. Masukkan akun Wi-Fi ke radcheck
+//                     await connection.execute(
+//                         "INSERT INTO radcheck (username, attribute, op, value) VALUES (?, 'Cleartext-Password', ':=', ?)",
+//                         [radiusUsername, wifiPassword]
+//                     );
+//                     await connection.execute(
+//                         "INSERT INTO radusergroup (username, groupname) VALUES (?, ?)",
+//                         [radiusUsername, groupname]
+//                     );
+
+//                     // 4. Masukkan akun login web ke webapp_users
+//                     await connection.execute(
+//                         "INSERT INTO webapp_users (username, password, radius_username, role) VALUES (?, ?, ?, 'user')",
+//                         [webUsername, hashedPassword, radiusUsername]
+//                     );
+//                 }
+//                 await connection.commit();
+//                 res.redirect(`/users/import?type=success&message=${results.length} pengguna berhasil diimpor.`);
+//             } catch (error) {
+//                 await connection.rollback();
+//                 console.error(error);
+//                 res.redirect(`/users/import?type=error&message=Terjadi kesalahan saat impor database.`);
+//             } finally {
+//                 connection.release();
+//             }
+//         });
+// };
+
 exports.importFromCsv = async (req, res) => {
     if (!req.file) {
         return res.redirect('/users/import?type=error&message=File tidak ditemukan.');
@@ -279,7 +347,7 @@ exports.importFromCsv = async (req, res) => {
     const filePath = req.file.path;
 
     fs.createReadStream(filePath)
-        .pipe(csv({ headers: ['nisn', 'nama_lengkap', 'kelas'], skipLines: 1 }))
+        .pipe(csv({ headers: ['nis', 'nisn', 'nama_lengkap', 'kelas'], skipLines: 1 }))
         .on('data', (data) => results.push(data))
         .on('end', async () => {
             fs.unlinkSync(filePath);
@@ -289,21 +357,38 @@ exports.importFromCsv = async (req, res) => {
             }
 
             const connection = await db.getConnection();
+            let importedCount = 0; // Variabel untuk menghitung user yang berhasil diimpor
+            let skippedCount = 0;  // Variabel untuk menghitung baris yang dilewati
+
             try {
                 await connection.beginTransaction();
+
                 for (const user of results) {
-                    const webUsername = user.nisn.trim(); // Username untuk login web
-                    const radiusUsername = user.nis.trim(); // Username untuk Wi-Fi
+                    // --- MODIFIKASI DIMULAI DI SINI ---
+                    // Periksa apakah data penting ada dan tidak kosong.
+                    // Ini akan menangani baris kosong (,,,) atau baris yang tidak lengkap.
+                    if (!user.nis || !user.nisn || !user.kelas) {
+                        skippedCount++; // Tambah hitungan baris yang dilewati
+                        console.warn('Melewatkan baris tidak valid di CSV:', user); // Opcional: log untuk debugging
+                        continue; // Lanjutkan ke baris data berikutnya
+                    }
+                    // --- AKHIR DARI MODIFIKASI ---
+
+                    const webUsername = user.nisn.trim();
+                    const radiusUsername = user.nis.trim();
                     const groupname = user.kelas.trim();
 
-                    if (!webUsername || !groupname) continue;
+                    if (!webUsername || !groupname) {
+                        skippedCount++;
+                        continue;
+                    };
 
                     // 1. Buat password acak untuk Wi-Fi
                     const wifiPassword = Math.random().toString(36).substring(2, 10);
 
                     // 2. Buat password untuk login web (awalnya sama dengan NISN) dan hash
                     const webPassword = webUsername;
-                    const hashedPassword = await bcrypt.hash(webPassword, 10);
+                    const hashedPassword = webPassword;
 
                     // Hapus data lama untuk menghindari duplikat di semua tabel
                     await connection.execute("DELETE FROM radcheck WHERE username = ?", [radiusUsername]);
@@ -325,12 +410,15 @@ exports.importFromCsv = async (req, res) => {
                         "INSERT INTO webapp_users (username, password, radius_username, role) VALUES (?, ?, ?, 'user')",
                         [webUsername, hashedPassword, radiusUsername]
                     );
+
+                    importedCount++; // Tambah hitungan user yang berhasil
                 }
+
                 await connection.commit();
-                res.redirect(`/users/import?type=success&message=${results.length} pengguna berhasil diimpor.`);
+                res.redirect(`/users/import?type=success&message=${importedCount} pengguna berhasil diimpor. ${skippedCount} baris dilewati.`);
             } catch (error) {
                 await connection.rollback();
-                console.error(error);
+                console.error("Terjadi kesalahan saat impor database:", error); // Diubah untuk log error lebih detail
                 res.redirect(`/users/import?type=error&message=Terjadi kesalahan saat impor database.`);
             } finally {
                 connection.release();
@@ -340,7 +428,7 @@ exports.importFromCsv = async (req, res) => {
 
 // Tambahkan fungsi ini di akhir file userController.js
 exports.batchAction = async (req, res) => {
-    const { action, target_profile, selected_users } = req.body;
+    const { action, target_profile, selected_users, password_prefix } = req.body;
 
     if (!action) {
         return res.redirect('/users?type=error&message=Aksi tidak dipilih.');
@@ -349,6 +437,7 @@ exports.batchAction = async (req, res) => {
     const connection = await db.getConnection();
     try {
         await connection.beginTransaction();
+        let affectedCount = 0;
 
         switch (action) {
             case 'change_profile':
@@ -361,6 +450,7 @@ exports.batchAction = async (req, res) => {
                     await connection.execute("DELETE FROM radusergroup WHERE username = ?", [username]);
                     await connection.execute("INSERT INTO radusergroup (username, groupname) VALUES (?, ?)", [username, target_profile]);
                 }
+                affectedCount = usersToChange.length;
                 break;
 
             case 'delete_selected':
@@ -373,6 +463,7 @@ exports.batchAction = async (req, res) => {
                     await connection.execute("DELETE FROM radusergroup WHERE username = ?", [username]);
                     // Tambahkan tabel lain jika perlu
                 }
+                affectedCount = usersToDelete.length;
                 break;
 
             case 'delete_by_group':
@@ -388,6 +479,57 @@ exports.batchAction = async (req, res) => {
                         // Tambahkan tabel lain jika perlu
                     }
                 }
+                affectedCount = usersInGroup.length;
+                break;
+
+            case 'reset_password_by_prefix':
+                if (!password_prefix) {
+                    throw new Error('Prefix tahun tidak diisi.');
+                }
+                // Dapatkan semua user yang username-nya dimulai dengan prefix
+                const [usersByPrefix] = await connection.execute(
+                    "SELECT username FROM radcheck WHERE username LIKE ? AND attribute = 'Cleartext-Password'",
+                    [`${password_prefix}%`]
+                );
+                
+                if (usersByPrefix.length === 0) {
+                    throw new Error(`Tidak ada pengguna dengan prefix "${password_prefix}".`);
+                }
+
+                for (const user of usersByPrefix) {
+                    // Generate password acak baru
+                    const newPassword = Math.random().toString(36).substring(2, 10);
+                    await connection.execute(
+                        "UPDATE radcheck SET value = ? WHERE username = ? AND attribute = 'Cleartext-Password'",
+                        [newPassword, user.username]
+                    );
+                }
+                affectedCount = usersByPrefix.length;
+                break;
+
+            case 'reset_password_by_profile':
+                if (!target_profile) {
+                    throw new Error('Profil tidak dipilih.');
+                }
+                // Dapatkan semua user di profil target
+                const [usersByProfile] = await connection.execute(
+                    "SELECT username FROM radusergroup WHERE groupname = ?",
+                    [target_profile]
+                );
+                
+                if (usersByProfile.length === 0) {
+                    throw new Error(`Tidak ada pengguna di profil "${target_profile}".`);
+                }
+
+                for (const user of usersByProfile) {
+                    // Generate password acak baru
+                    const newPassword = Math.random().toString(36).substring(2, 10);
+                    await connection.execute(
+                        "UPDATE radcheck SET value = ? WHERE username = ? AND attribute = 'Cleartext-Password'",
+                        [newPassword, user.username]
+                    );
+                }
+                affectedCount = usersByProfile.length;
                 break;
 
             default:
@@ -395,7 +537,7 @@ exports.batchAction = async (req, res) => {
         }
 
         await connection.commit();
-        res.redirect('/users?type=success&message=Aksi massal berhasil dilaksanakan.');
+        res.redirect(`/users?type=success&message=Aksi massal berhasil dilaksanakan. ${affectedCount} pengguna terpengaruh.`);
 
     } catch (error) {
         await connection.rollback();
